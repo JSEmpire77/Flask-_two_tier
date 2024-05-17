@@ -81,51 +81,42 @@ docker-compose down
 - First create a docker image from Dockerfile
 ```bash
 docker build -t flaskapp .
+docker pull mysql:5.7
+```
+- Now, make sure that you have created a volume using following command
+```bash
+docker volume create --opt type=none --opt device=".." --opt o=bind flask-volume
 ```
 
 - Now, make sure that you have created a network using following command
 ```bash
-docker network create twotier
+docker network create flask-net
+docekr netwrok inspect flask-net //to watch inside network.. 
 ```
 
 - Attach both the containers in the same network, so that they can communicate with each other
 
 i) MySQL container 
 ```bash
-docker run -d \
-    --name mysql \
-    -v mysql-data:/var/lib/mysql \
-    --network=twotier \
-    -e MYSQL_DATABASE=mydb \
-    -e MYSQL_USER=root \
-    -e MYSQL_ROOT_PASSWORD=admin \
-    -p 3306:3306 \
-    mysql:5.7
+docker run -d -p 3306:3306 -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin -e MYSQL_DATABASE=mydb -e MYSQL_ROOT_PASSWORD=admin --network=flask-net --name=mysql mysql:5.7
 
 ```
 ii) Backend container
 ```bash
-docker run -d \
-    --name flaskapp \
-    --network=twotier \
-    -e MYSQL_HOST=mysql \
-    -e MYSQL_USER=root \
-    -e MYSQL_PASSWORD=admin \
-    -e MYSQL_DB=mydb \
-    -p 5000:5000 \
-    flaskapp:latest
-
+docker run -d -p 5000:5000 --mount source=flaskv,target=/data -e MYSQL_HOST=mysql -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin -e MYSQL_DB=mydb --network=flask-net --name=flask-app flask-app:latest
 ```
 
-## Notes
-
-- Make sure to replace placeholders (e.g., `your_username`, `your_password`, `your_database`) with your actual MySQL configuration.
-
-- This is a basic setup for demonstration purposes. In a production environment, you should follow best practices for security and performance.
-
-- Be cautious when executing SQL queries directly. Validate and sanitize user inputs to prevent vulnerabilities like SQL injection.
-
-- If you encounter issues, check Docker logs and error messages for troubleshooting.
-
+- Now, create table inside container
 ```
+docker exec -it 8df15fbe2b68 bash // it return bash shell
+mysql -u root -p // password admin
+show databases;
+use databse;
+show tables;
+paste code ...
+for analyze database write a query..
+```
+
+## Then Enjoy Your Application successfully deployed...
+
 
